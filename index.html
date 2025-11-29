@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Workday Checklist</title>
+    <style>
+        /* Basic Reset and Font */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f4f7f9; 
+            color: #333; 
+            /* Center content on large screens */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        /* Main Container for large screens */
+        h1, h2, form, .print-controls {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* Containers and Typography */
+        h1 { color: #004d99; border-bottom: 4px solid #004d99; padding-bottom: 10px; margin-bottom: 25px; text-align: center; }
+        h2 { color: #333; margin-top: 30px; margin-bottom: 15px; padding: 5px 10px; background-color: #e6eef5; border-left: 5px solid #007bff; border-radius: 4px; }
+        
+        /* Table Styling */
+        .task-table { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0; 
+            margin-bottom: 30px; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+            border-radius: 8px; 
+            overflow: hidden; 
+        }
+        .task-table th, .task-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        .task-table th { background-color: #007bff; color: white; font-weight: 600; text-transform: uppercase; }
+        
+        /* Task Status Styling */
+        .checkbox-container { display: flex; align-items: center; justify-content: center; height: 100%; }
+        .checkbox-container input { transform: scale(1.4); cursor: pointer; }
+
+        /* Highlight Sections for Safety */
+        .safety th, .safety td { background-color: #fff0f0; } /* Light Red for Safety */
+        .safety th { background-color: #dc3545; color: white; }
+        
+        /* Input field styling (Textarea) */
+        .task-table textarea {
+            width: 90%;
+            min-height: 35px; /* Default height for a few lines */
+            padding: 5px;
+            margin-top: 8px; 
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; 
+            resize: none; /* Disable manual resize */
+            overflow: hidden; /* Hide scrollbar until JS expands it */
+        }
+        .task-table input[type="text"] {
+            width: 90%;
+            padding: 5px;
+            margin-top: 8px; 
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; 
+        }
+
+
+        /* --- STYLES FOR COMPLETED TASKS (RED X OVERLAY) --- */
+
+        .task-table tr { position: relative; }
+
+        .task-done td {
+            color: #999;
+            text-decoration: line-through;
+            transition: all 0.3s ease;
+        }
+
+        .task-done::after {
+            content: "X";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 8rem; 
+            font-weight: bold;
+            color: rgba(220, 53, 69, 0.2); 
+            pointer-events: none; 
+            z-index: 10;
+        }
+
+        /* Print Controls Button */
+        .print-controls {
+            margin-top: 40px;
+            text-align: center;
+            padding: 20px;
+            background-color: #e6eef5;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .print-controls button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .print-controls button:hover {
+            background-color: #218838;
+        }
+        .print-instructions {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+
+        /* Responsive adjustments for SCREEN (tablet/mobile) */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .task-table th, .task-table td { 
+                padding: 8px 10px; 
+                display: block; 
+                width: 100%;
+                text-align: left;
+                /* FIX 1: Use border-box to prevent padding from expanding the 100% width and causing clipping */
+                box-sizing: border-box; 
+            }
+            .task-table thead { display: none; } 
+            .task-table tr { 
+                display: block; 
+                margin-bottom: 15px; 
+                border: 1px solid #ccc;
+                border-radius: 8px;
+            }
+            .task-table td:before {
+                content: attr(data-label);
+                font-weight: bold;
+                margin-right: 10px;
+                display: inline-block;
+                width: 120px; 
+            }
+            .checkbox-container { justify-content: start; }
+            .task-table input[type="text"], .task-table textarea {
+                width: 100%;
+            }
+        }
+
+        /* --- PRINT OPTIMIZATION (FOR PDF EXPORT) --- */
+        @media print {
+            .print-controls, h1 {
+                display: none; /* Hide button and big title from printout */
+            }
+            body {
+                padding: 0;
+                margin: 0;
+                background: white;
+                color: black;
+            }
+            .task-table {
+                box-shadow: none;
+                border-radius: 0;
+                border-spacing: 0;
+                page-break-inside: auto; /* Helps tables break cleanly across pages */
+            }
+            .task-table tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+                border-bottom: 1px solid #555;
+            }
+            .task-table th {
+                background-color: #ccc !important;
+                color: black !important;
+            }
+            .task-table textarea {
+                border: none !important; /* Hide textarea borders for clean print */
+                box-shadow: none !important;
+                background-color: transparent !important;
+                min-height: 0 !important;
+                overflow: visible !important; /* Ensure all content prints */
+                height: auto !important; /* Ensure all content prints */
+                width: 100%;
+                padding: 0;
+                margin-top: 0;
+            }
+            /* Remove the red X overlay for printing */
+            .task-done::after {
+                display: none;
+            }
+            /* Ensure the checkbox status is still clear on print */
+            .task-done td {
+                text-decoration: line-through;
+                color: #555;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkboxes = document.querySelectorAll('.task-table input[type="checkbox"]');
+            // FIX 2: Correcting the textarea selector to use the "auto-expand" class for robustness
+            const textareas = document.querySelectorAll('.task-table textarea.auto-expand');
+
+            // 1. Checkbox functionality (Red X)
+            checkboxes.forEach(checkbox => {
+                const toggleDoneClass = (cb) => {
+                    const row = cb.closest('tr');
+                    if (row) {
+                        // Using toggle based on the checked state
+                        row.classList.toggle('task-done', cb.checked);
+                    }
+                };
+
+                // Initialize state on load
+                toggleDoneClass(checkbox);
+                
+                // Add event listener
+                checkbox.addEventListener('change', (event) => toggleDoneClass(event.target));
+            });
+
+            // 2. Textarea Auto-Expand functionality (Dynamic Notes)
+            const autoResizeTextarea = (textarea) => {
+                // Reset height to fit the content exactly
+                textarea.style.height = 'auto';
+                // Set the height to the scroll height (content height)
+                textarea.style.height = textarea.scrollHeight + 'px';
+            };
+
+            textareas.forEach(textarea => {
+                // Initial resize on load (in case browser stored text)
+                autoResizeTextarea(textarea);
+
+                // Resize on input event
+                textarea.addEventListener('input', () => autoResizeTextarea(textarea));
+            });
+        });
+
+        // 3. Print Function
+        function printChecklist() {
+            window.print();
+        }
+    </script>
+
+    <h1>✅ Volunteer Workday Task Management</h1>
+    <p style="text-align: center; font-size: 1.1em; font-weight: bold; padding: 10px; border: 1px dashed #dc3545; background-color: #fcf8e3; border-radius: 4px;">
+        Total Volunteers: 20-30 | 🚨 SAFETY IS THE HIGHEST PRIORITY 🚨
+    </p>
+
+    <!-- The entire table content is wrapped in a form for input fields to function -->
+    <form>
+        <!-- SAFETY & PREP SECTION -->
+        <h2 class="safety-heading">⛑️ PHASE 1: Safety & Preparation (Supervisor Check)</h2>
+        <table class="task-table safety">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Done</th>
+                    <th>Task</th>
+                    <th>Notes / Responsibility</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-task-id="emergencyPlan">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Emergency Plan & First Aid Kit</strong> Location Confirmed</td>
+                    <td data-label="Notes">
+                        Verify routes, designated safe zone, and ensure First Aid Kit is accessible and stocked.
+                        <br><textarea class="auto-expand" placeholder="Log details (e.g., Kit verified by John D.)"></textarea>
+                    </td>
+                </tr>
+                <tr data-task-id="toolStaging">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Tool & Material Staging</strong> Complete</td>
+                    <td data-label="Notes">
+                        Organize all tools and stage materials (mulch, paint, screens) near work sites.
+                        <br><textarea class="auto-expand" placeholder="Log details (e.g., All exterior materials staged)"></textarea>
+                    </td>
+                </tr>
+                <tr data-task-id="scaffoldingInspection">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Baker Scaffolding</strong> Inspection & Setup</td>
+                    <td data-label="Notes">
+                        <strong>CRITICAL (DC-82-E):</strong> Only *trained and authorized* personnel to supervise assembly and use. All safety locks checked.
+                        <br><textarea class="auto-expand" placeholder="Log details (e.g., Inspected and tagged by Sarah K.)"></textarea>
+                    </td>
+                </tr>
+                <tr data-task-id="safetyJHAMeeting">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Safety JHA Meeting</strong> for Phase 2 Tasks</td>
+                    <td data-label="Notes">
+                        Review Job Hazard Analysis (DC-83/DC-85) for high-risk jobs (Roof, Scaffolding). Conducted by Team Leaders.
+                        <br><textarea class="auto-expand" placeholder="Log details (e.g., JHA covered 8:30 AM)"></textarea>
+                    </td>
+                </tr>
+                <tr data-task-id="safetyBriefing">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Safety Briefing</strong> Delivered (Mandatory)</td>
+                    <td data-label="Notes">
+                        Cover all high-risk hazards, injury reporting protocol, hydration, and <strong>MANDATORY PPE (Hard Hats, Safety Glasses, Protective Footwear)</strong>.
+                        <br><textarea class="auto-expand" placeholder="Log details (e.g., Briefing completed 8:45 AM)"></textarea>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- PHYSICAL WORK SECTION -->
+        <h2>🛠️ PHASE 2: Physical Work Tasks (Volunteer Assignments)</h2>
+        <table class="task-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Done</th>
+                    <th>Task</th>
+                    <th style="width: 20%;">Suggested Volunteers</th>
+                    <th style="width: 20%;">Team Leader</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-task-id="cleaningRoof">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Cleaning Roof</strong> (High-Risk Work)</td>
+                    <td data-label="Volunteers"><strong>2-4</strong> (Skilled/Trained)</td>
+                    <td data-label="Leader"><input type="text" placeholder="Enter Leader Name"></td>
+                </tr>
+                <tr data-task-id="weatherstrippingLock">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Weatherstripping & Additional Lock</strong> (Exit Doors)</td>
+                    <td data-label="Volunteers"><strong>2-3</strong> (Carpentry/Handy)</td>
+                    <td data-label="Leader"><input type="text" placeholder="Enter Leader Name"></td>
+                </tr>
+                <tr data-task-id="insulatingRock">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Further Insulating of Faux Rock</strong></td>
+                    <td data-label="Volunteers"><strong>3-5</strong> (General Labor)</td>
+                    <td data-label="Leader"><input type="text" placeholder="Enter Leader Name"></td>
+                </tr>
+                <tr data-task-id="paintPrep">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Paint Peeling Prep</strong> (Front Door Interior - *Very Important*)</td>
+                    <td data-label="Volunteers"><strong>2-3</strong> (Detail Work/Painting)</td>
+                    <td data-label="Leader"><input type="text" placeholder="Enter Leader Name"></td>
+                </tr>
+                <tr data-task-id="vacuumMaintenance">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Physical Vacuum Maintenance</strong> (Cleaning filters, bags, checking belts)</td>
+                    <td data-label="Volunteers"><strong>2-3</strong> (Detail Work)</td>
+                    <td data-label="Leader"><input type="text" placeholder="Enter Leader Name"></td>
+                </tr>
+                <tr data-task-id="drainScreens">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Wire Screen on End of Drain Lines</strong> (Opossum prevention)</td>
+                    <td data-label="Volunteers"><strong>2</strong> (Specific Focus)</td>
+                    <td data-label="Leader"><input type="text" placeholder="Enter Leader Name"></td>
+                </tr>
+                <tr data-task-id="mulchSpreading">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Pine Mulch Spreading</strong> (Landscaping)</td>
+                    <td data-label="Volunteers"><strong>4-6</strong> (General Labor/High Volume)</td>
+                    <td data-label">Leader<input type="text" placeholder="Enter Leader Name"></td>
+                </tr>
+                <tr data-task-id="floaterTeam">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>FLOATER / SUPPORT TEAM</strong> (Breaks & Logistics)</td>
+                    <td data-label="Volunteers"><strong>4-6</strong> (Safety Monitor/Support)</td>
+                    <td data-label="Leader"><input type="text" placeholder="Enter Leader Name"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- END OF DAY SECTION -->
+        <h2>🧹 PHASE 3: End of Day Procedures</h2>
+        <table class="task-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Done</th>
+                    <th>Task</th>
+                    <th>Notes / Responsibility</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-task-id="toolCleanup">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Tool Cleanup & Inventory</strong></td>
+                    <td data-label="Notes">
+                        All power tools locked up; hand tools counted.
+                        <br><textarea class="auto-expand" placeholder="Log details (e.g., All inventory checked and secured)"></textarea>
+                    </td>
+                </tr>
+                <tr data-task-id="siteCleanup">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Site Cleanup</strong> (All areas cleared of debris/trash)</td>
+                    <td data-label="Notes">
+                        Final sweep of all work areas, especially the roof site.
+                        <br><textarea class="auto-expand" placeholder="Log details (e.g., Exterior areas clean)"></textarea>
+                    </td>
+                </tr>
+                <tr data-task-id="finalDebrief">
+                    <td data-label="Done"><div class="checkbox-container"><input type="checkbox"></div></td>
+                    <td data-label="Task"><strong>Walk-Through & Safety Debrief</strong></td>
+                    <td data-label="Notes">
+                        Supervisor final checks; volunteer thank you and sign-out. <strong>Report all injuries, minor incidents, and near misses.</strong>
+                        <br><textarea class="auto-expand" placeholder="Log details (e.g., Zero incidents reported)"></textarea>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+    
+    <!-- PRINT CONTROLS -->
+    <div class="print-controls">
+        <button onclick="printChecklist()">🖨️ Print to PDF / Save Completed Checklist</button>
+        <p class="print-instructions">
+            <strong>Instructions:</strong> Click the button above, then in the print dialog box that appears, change the destination to <strong>'Save as PDF'</strong> (instead of a physical printer) and click Print/Save.
+        </p>
+    </div>
+</body>
+</html>
